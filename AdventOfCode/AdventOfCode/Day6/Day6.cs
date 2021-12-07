@@ -7,11 +7,6 @@ namespace AdventOfCode
 {
     public class Day6
     {
-        private class Point
-        {
-            public int X { get; set; }
-            public int Y { get; set; }
-        }
         public long Compute(string filePath, int days = 80)
         {
             var input = FileReader.GetFileContent(filePath).ToList();
