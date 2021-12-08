@@ -69,18 +69,18 @@ namespace AdventOfCode
 
         private readonly List<Func<List<string>, List<String>, string>> _functions = new List<Func<List<string>, List<string>, string>>
         {
-            (List<string> possibilities, List<string> fixes) => fixes[2].ToCharArray().First(x => !fixes[0].ToCharArray().Contains(x)).ToString(),
-            (List<string> possibilities, List<string> fixes) => possibilities.SelectMany(x => x.ToCharArray()).GroupBy(x => x).First(x =>
+            (possibilities, fixes) => fixes[2].ToCharArray().First(x => !fixes[0].ToCharArray().Contains(x)).ToString(),
+            (possibilities, fixes) => possibilities.SelectMany(x => x.ToCharArray()).GroupBy(x => x).First(x =>
                 x.Count() == 6 && !fixes[0].ToCharArray().Contains(x.Key) && !fixes[2].ToCharArray().Contains(x.Key)).Key.ToString(),
-            (List<string> possibilities, List<string> fixes) => possibilities.SelectMany(x => x.ToCharArray()).GroupBy(x => x).First(x =>
+            (possibilities, fixes) => possibilities.SelectMany(x => x.ToCharArray()).GroupBy(x => x).First(x =>
                 x.Count() == 8 && fixes[0].ToCharArray().Contains(x.Key) && fixes[2].ToCharArray().Contains(x.Key)).Key.ToString(),
-            (List<string> possibilities, List<string> fixes) => possibilities.SelectMany(x => x.ToCharArray()).GroupBy(x => x).First(x =>
+            (possibilities, fixes) => possibilities.SelectMany(x => x.ToCharArray()).GroupBy(x => x).First(x =>
                 x.Count() == 7 && !fixes[0].ToCharArray().Contains(x.Key) && !fixes[2].ToCharArray().Contains(x.Key) && fixes[1].ToCharArray().Contains(x.Key)).Key.ToString(),
-            (List<string> possibilities, List<string> fixes) => possibilities.SelectMany(x => x.ToCharArray()).GroupBy(x => x).First(x =>
+            (possibilities, fixes) => possibilities.SelectMany(x => x.ToCharArray()).GroupBy(x => x).First(x =>
                 x.Count() == 4 && !fixes[0].ToCharArray().Contains(x.Key) && !fixes[2].ToCharArray().Contains(x.Key)).Key.ToString(),
-            (List<string> possibilities, List<string> fixes) => possibilities.SelectMany(x => x.ToCharArray()).GroupBy(x => x).First(x =>
+            (possibilities, fixes) => possibilities.SelectMany(x => x.ToCharArray()).GroupBy(x => x).First(x =>
                 x.Count() == 9 && fixes[0].ToCharArray().Contains(x.Key) && fixes[2].ToCharArray().Contains(x.Key)).Key.ToString(),
-            (List<string> possibilities, List<string> fixes) => possibilities.SelectMany(x => x.ToCharArray()).GroupBy(x => x).First(x =>
+            (possibilities, fixes) => possibilities.SelectMany(x => x.ToCharArray()).GroupBy(x => x).First(x =>
                 x.Count() == 7 && !fixes[0].ToCharArray().Contains(x.Key) && !fixes[2].ToCharArray().Contains(x.Key) && !fixes[1].ToCharArray().Contains(x.Key)).Key.ToString()
         };
 
