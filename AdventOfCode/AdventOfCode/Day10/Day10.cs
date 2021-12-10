@@ -15,10 +15,10 @@ namespace AdventOfCode
             var result = 0;
             foreach(var line in input)
             {
-                string copyLine = TreatLine(line);
-                if (IsCorruptedLine(copyLine))
+                string treatedLine = TreatLine(line);
+                if (IsCorruptedLine(treatedLine))
                 {
-                    result += _points[copyLine.First(x => _points.Keys.Contains(x))];
+                    result += _points[treatedLine.First(x => _points.Keys.Contains(x))];
                 }
             }
             return result;
@@ -30,11 +30,11 @@ namespace AdventOfCode
             var scores = new List<long>();
             foreach (var line in input)
             {
-                string copyLine = TreatLine(line);
-                if (IsIncompleteLine(copyLine))
+                string treatedLine = TreatLine(line);
+                if (IsIncompleteLine(treatedLine))
                 {
                     long score = 0;
-                    foreach(char c in copyLine.Reverse())
+                    foreach(char c in treatedLine.Reverse())
                     {
                         score = score * 5 + _completePoints[c];
                     }
