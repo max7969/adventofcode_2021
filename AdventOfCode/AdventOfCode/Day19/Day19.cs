@@ -56,12 +56,12 @@ namespace AdventOfCode
             List<string> intersections = new List<string>();
             BuildIntersections(scanners, intersections);
 
-            while(scanners.Any(x => x.Coordinate == null))
+            while (scanners.Any(x => x.Coordinate == null))
             {
                 var knownPositions = scanners.Where(x => x.Coordinate != null).ToList();
                 var unknownPositions = scanners.Where(x => x.Coordinate == null).ToList();
 
-                foreach(var intersection in intersections)
+                foreach (var intersection in intersections)
                 {
                     int a = int.Parse(intersection.Split(",")[0]);
                     int b = int.Parse(intersection.Split(",")[1]);
@@ -92,27 +92,86 @@ namespace AdventOfCode
                             beaconsCouple.Add((known.Beacons[beaconInI.ToList()[i]], unknown.Beacons[beaconInJ.ToList()[i]]));
                         }
 
-                        int? xValue = FindSolution(beaconsCouple.Select(x => x.Item1.X).ToList(), beaconsCouple.Select(x => x.Item2.X).ToList());
+                        int? xValue = null;
+                        int? yValue = null;
+                        int? zValue = null;
 
-                        xValue = xValue ?? FindSolution(beaconsCouple.Select(x => x.Item1.X).ToList(), beaconsCouple.Select(x => -x.Item2.X).ToList());
-                        xValue = xValue ?? FindSolution(beaconsCouple.Select(x => x.Item1.X).ToList(), beaconsCouple.Select(x => x.Item2.Y).ToList());
-                        xValue = xValue ?? FindSolution(beaconsCouple.Select(x => x.Item1.X).ToList(), beaconsCouple.Select(x => x.Item2.Z).ToList());
+                        List<Coordinate> newBeacons = unknown.Beacons.ToList();
 
-                        int? yValue = FindSolution(beaconsCouple.Select(x => x.Item1.Y).ToList(), beaconsCouple.Select(x => x.Item2.Y).ToList());
-                        yValue = yValue ?? FindSolution(beaconsCouple.Select(x => x.Item1.Y).ToList(), beaconsCouple.Select(x => x.Item2.X).ToList());
-                        yValue = yValue ?? FindSolution(beaconsCouple.Select(x => x.Item1.Y).ToList(), beaconsCouple.Select(x => x.Item2.Z).ToList());
-
-                        int? zValue = FindSolution(beaconsCouple.Select(x => x.Item1.Z).ToList(), beaconsCouple.Select(x => x.Item2.Z).ToList());
-                        zValue = zValue ?? FindSolution(beaconsCouple.Select(x => x.Item1.Z).ToList(), beaconsCouple.Select(x => x.Item2.X).ToList());
-                        zValue = zValue ?? FindSolution(beaconsCouple.Select(x => x.Item1.Z).ToList(), beaconsCouple.Select(x => x.Item2.Y).ToList());
-
-                        unknown.Coordinate = new Coordinate {X = known.Coordinate.X + xValue ?? 0, Y= known.Coordinate.Y + yValue ?? 0, Z = known.Coordinate.Z + zValue ?? 0};
+                        foreach (var operation in operationsX)
+                        {
+                            xValue = FindSolution(beaconsCouple.Select(x => x.Item1.X).ToList(), beaconsCouple.Select(x => operation(x.Item2)).Select(x => x.X).ToList());
+                            if (xValue != null)
+                            {
+                                for (int i = 0; i<unknown.Beacons.Count; i++)
+                                {
+                                    unknown.Beacons[i] = operation(unknown.Beacons[i]);
+                                }
+                                break;
+                            }
+                        }
+                        foreach (var operation in operationsY)
+                        {
+                            yValue = FindSolution(beaconsCouple.Select(x => x.Item1.Y).ToList(), beaconsCouple.Select(x => operation(x.Item2)).Select(x => x.Y).ToList());
+                            if (yValue != null)
+                            {
+                                for (int i = 0; i < unknown.Beacons.Count; i++)
+                                {
+                                    unknown.Beacons[i] = operation(unknown.Beacons[i]);
+                                }
+                                break;
+                            }
+                        }
+                        foreach (var operation in operationsZ)
+                        {
+                            zValue = FindSolution(beaconsCouple.Select(x => x.Item1.Z).ToList(), beaconsCouple.Select(x => operation(x.Item2)).Select(x => x.Z).ToList());
+                            if (zValue != null)
+                            {
+                                for (int i = 0; i < unknown.Beacons.Count; i++)
+                                {
+                                    unknown.Beacons[i] = operation(unknown.Beacons[i]);
+                                }
+                                break;
+                            }
+                        }
+                        unknown.Coordinate = new Coordinate { X = (xValue ?? 0), Y = (yValue ?? 0), Z = (zValue ?? 0) };
+                        foreach (var beacon in unknown.Beacons)
+                        {
+                            beacon.X = unknown.Coordinate.X - beacon.X;
+                            beacon.Y = unknown.Coordinate.Y - beacon.Y;
+                            beacon.Z = unknown.Coordinate.Z - beacon.Z;
+                        }
                     }
                 }
             }
 
             return 0;
         }
+
+        public static List<Func<Coordinate, Coordinate>> operationsX = new List<Func<Coordinate, Coordinate>>
+        {
+            initial => new Coordinate { X = initial.X, Y = initial.Y, Z = initial.Z },
+            initial => new Coordinate { X = -initial.X, Y = initial.Y, Z = initial.Z },
+            initial => new Coordinate { X = initial.Y, Y = initial.X, Z = initial.Z },
+            initial => new Coordinate { X = -initial.Y, Y = initial.X, Z = initial.Z },
+            initial => new Coordinate { X = initial.Z, Y = initial.Y, Z = initial.X },
+            initial => new Coordinate { X = -initial.Z, Y = initial.Y, Z = initial.X }
+        };
+
+        public static List<Func<Coordinate, Coordinate>> operationsY = new List<Func<Coordinate, Coordinate>>
+        {
+            initial => new Coordinate { X = initial.X, Y = initial.Y, Z = initial.Z },
+            initial => new Coordinate { X = initial.X, Y = -initial.Y, Z = initial.Z },
+            initial => new Coordinate { X = initial.X, Y = initial.Z, Z = initial.Y },
+            initial => new Coordinate { X = initial.X, Y = -initial.Z, Z = initial.Y }
+
+        };
+
+        public static List<Func<Coordinate, Coordinate>> operationsZ = new List<Func<Coordinate, Coordinate>>
+        {
+            initial => new Coordinate { X = initial.X, Y = initial.Y, Z = initial.Z },
+            initial => new Coordinate { X = initial.X, Y = initial.Y, Z = -initial.Z }
+        };
 
         public int? FindSolution(List<int> a, List<int> b)
         {
