@@ -58,129 +58,124 @@ namespace AdventOfCode
 
             while (scanners.Any(x => x.Coordinate == null))
             {
-                var knownPositions = scanners.Where(x => x.Coordinate != null).ToList();
-                var unknownPositions = scanners.Where(x => x.Coordinate == null).ToList();
-
                 foreach (var intersection in intersections)
                 {
+                    var knownPositions = scanners.Where(x => x.Coordinate != null).ToList();
+                    var unknownPositions = scanners.Where(x => x.Coordinate == null).ToList();
+
                     int a = int.Parse(intersection.Split(",")[0]);
                     int b = int.Parse(intersection.Split(",")[1]);
 
                     if (knownPositions.Select(x => x.Number).Contains(a) && unknownPositions.Select(x => x.Number).Contains(b))
                     {
-                        var known = scanners.Single(x => x.Number == a);
-                        var unknown = scanners.Single(x => x.Number == b);
-
-                        var matchingDistances = known.Distances.Keys.Intersect(unknown.Distances.Keys).ToList();
-                        HashSet<int> beaconInI = new HashSet<int>();
-                        HashSet<int> beaconInJ = new HashSet<int>();
-                        List<(Coordinate, Coordinate)> beaconsCouple = new List<(Coordinate, Coordinate)>();
-                        foreach (var matchingDistance in matchingDistances)
-                        {
-                            foreach (var element in known.Distances[matchingDistance].Split(",").Select(int.Parse).ToList())
-                            {
-                                beaconInI.Add(element);
-                            }
-                            foreach (var element in unknown.Distances[matchingDistance].Split(",").Select(int.Parse).ToList())
-                            {
-                                beaconInJ.Add(element);
-                            }
-                        }
-
-                        for (int i = 0; i < beaconInI.Count; i++)
-                        {
-                            beaconsCouple.Add((known.Beacons[beaconInI.ToList()[i]], unknown.Beacons[beaconInJ.ToList()[i]]));
-                        }
-
-                        int? xValue = null;
-                        int? yValue = null;
-                        int? zValue = null;
-
-                        List<Coordinate> newBeacons = unknown.Beacons.ToList();
-
-                        foreach (var operation in operationsX)
-                        {
-                            xValue = FindSolution(beaconsCouple.Select(x => x.Item1.X).ToList(), beaconsCouple.Select(x => operation(x.Item2)).Select(x => x.X).ToList());
-                            if (xValue != null)
-                            {
-                                for (int i = 0; i<unknown.Beacons.Count; i++)
-                                {
-                                    unknown.Beacons[i] = operation(unknown.Beacons[i]);
-                                }
-                                break;
-                            }
-                        }
-                        foreach (var operation in operationsY)
-                        {
-                            yValue = FindSolution(beaconsCouple.Select(x => x.Item1.Y).ToList(), beaconsCouple.Select(x => operation(x.Item2)).Select(x => x.Y).ToList());
-                            if (yValue != null)
-                            {
-                                for (int i = 0; i < unknown.Beacons.Count; i++)
-                                {
-                                    unknown.Beacons[i] = operation(unknown.Beacons[i]);
-                                }
-                                break;
-                            }
-                        }
-                        foreach (var operation in operationsZ)
-                        {
-                            zValue = FindSolution(beaconsCouple.Select(x => x.Item1.Z).ToList(), beaconsCouple.Select(x => operation(x.Item2)).Select(x => x.Z).ToList());
-                            if (zValue != null)
-                            {
-                                for (int i = 0; i < unknown.Beacons.Count; i++)
-                                {
-                                    unknown.Beacons[i] = operation(unknown.Beacons[i]);
-                                }
-                                break;
-                            }
-                        }
-                        unknown.Coordinate = new Coordinate { X = (xValue ?? 0), Y = (yValue ?? 0), Z = (zValue ?? 0) };
-                        foreach (var beacon in unknown.Beacons)
-                        {
-                            beacon.X = unknown.Coordinate.X - beacon.X;
-                            beacon.Y = unknown.Coordinate.Y - beacon.Y;
-                            beacon.Z = unknown.Coordinate.Z - beacon.Z;
-                        }
+                        FindUnknownCoordinates(scanners, a, b);
+                    } 
+                    else if (knownPositions.Select(x => x.Number).Contains(b) && unknownPositions.Select(x => x.Number).Contains(a))
+                    {
+                        FindUnknownCoordinates(scanners, b, a);
                     }
                 }
             }
 
-            return 0;
+            List<int> distances = new List<int>();
+            for (int i=0; i<scanners.Count; i++)
+            {
+                for (int j=0;j<scanners.Count;j++)
+                {
+                    distances.Add(Compute3dDist(scanners[i].Coordinate, scanners[j].Coordinate));
+                }
+            }
+            return distances.Max();
         }
 
-        public static List<Func<Coordinate, Coordinate>> operationsX = new List<Func<Coordinate, Coordinate>>
+        private void FindUnknownCoordinates(List<Scanner> scanners, int a, int b)
         {
-            initial => new Coordinate { X = initial.X, Y = initial.Y, Z = initial.Z },
-            initial => new Coordinate { X = -initial.X, Y = initial.Y, Z = initial.Z },
-            initial => new Coordinate { X = initial.Y, Y = initial.X, Z = initial.Z },
-            initial => new Coordinate { X = -initial.Y, Y = initial.X, Z = initial.Z },
-            initial => new Coordinate { X = initial.Z, Y = initial.Y, Z = initial.X },
-            initial => new Coordinate { X = -initial.Z, Y = initial.Y, Z = initial.X }
-        };
+            var known = scanners.Single(x => x.Number == a);
+            var unknown = scanners.Single(x => x.Number == b);
 
-        public static List<Func<Coordinate, Coordinate>> operationsY = new List<Func<Coordinate, Coordinate>>
-        {
-            initial => new Coordinate { X = initial.X, Y = initial.Y, Z = initial.Z },
-            initial => new Coordinate { X = initial.X, Y = -initial.Y, Z = initial.Z },
-            initial => new Coordinate { X = initial.X, Y = initial.Z, Z = initial.Y },
-            initial => new Coordinate { X = initial.X, Y = -initial.Z, Z = initial.Y }
-
-        };
-
-        public static List<Func<Coordinate, Coordinate>> operationsZ = new List<Func<Coordinate, Coordinate>>
-        {
-            initial => new Coordinate { X = initial.X, Y = initial.Y, Z = initial.Z },
-            initial => new Coordinate { X = initial.X, Y = initial.Y, Z = -initial.Z }
-        };
-
-        public int? FindSolution(List<int> a, List<int> b)
-        {
-            HashSet<int> results = a.Select((x, i) => x + b[i]).ToHashSet();
-            if (results.Count == 1)
+            var matchingDistances = known.Distances.Keys.Intersect(unknown.Distances.Keys).ToList();
+            HashSet<int> beaconInI = new HashSet<int>();
+            HashSet<int> beaconInJ = new HashSet<int>();
+            List<(Coordinate, Coordinate)> beaconsCouple = new List<(Coordinate, Coordinate)>();
+            foreach (var matchingDistance in matchingDistances)
             {
-                return results.First();
+                foreach (var element in known.Distances[matchingDistance].Split(",").Select(int.Parse).ToList())
+                {
+                    beaconInI.Add(element);
+                }
+                foreach (var element in unknown.Distances[matchingDistance].Split(",").Select(int.Parse).ToList())
+                {
+                    beaconInJ.Add(element);
+                }
             }
-            return null;
+
+            for (int i = 0; i < beaconInI.Count; i++)
+            {
+                beaconsCouple.Add((known.Beacons[beaconInI.ToList()[i]], unknown.Beacons[beaconInJ.ToList()[i]]));
+            }
+
+            foreach (var operation in operations)
+            {
+                var tupleList = beaconsCouple.Select(x => (x.Item1.X, x.Item1.Y, x.Item1.Z)).ToList();
+                var movedTupleList = beaconsCouple.Select(x => operation(x.Item2.X, x.Item2.Y, x.Item2.Z)).ToList();
+                var values = FindSolution(tupleList.Select(x => x.X).ToList(), tupleList.Select(x => x.Y).ToList(), tupleList.Select(x => x.Z).ToList(), movedTupleList.Select(x => x.X).ToList(), movedTupleList.Select(x => x.Y).ToList(), movedTupleList.Select(x => x.Z).ToList());
+                if (values.xValue != null)
+                {
+                    unknown.Coordinate = new Coordinate { X = (values.xValue ?? 0), Y = (values.yValue ?? 0), Z = (values.zValue ?? 0) };
+                    for (int i = 0; i < unknown.Beacons.Count; i++)
+                    {
+                        var newCoordinates = operation(unknown.Beacons[i].X, unknown.Beacons[i].Y, unknown.Beacons[i].Z);
+                        unknown.Beacons[i].X = newCoordinates.X + unknown.Coordinate.X;
+                        unknown.Beacons[i].Y = newCoordinates.Y + unknown.Coordinate.Y;
+                        unknown.Beacons[i].Z = newCoordinates.Z + unknown.Coordinate.Z;
+
+                    }
+                    break;
+                }
+            }
+        }
+
+        public static List<Func<int, int, int, (int X, int Y, int Z)>> operations = new List<Func<int, int, int, (int X, int Y, int Z)>>
+        {
+            (x,y,z) => (x, z, -y),
+            (x,y,z) => (x, -y, -z),
+            (x,y,z) => (x, y, z),
+            (x,y,z) => (x, -z, y),
+            (x,y,z) => (-z, x, -y),
+            (x,y,z) => (-x, -z, -y),
+            (x,y,z) => (z, -x, -y),
+            (x,y,z) => (z, -y, x),
+            (x,y,z) => (y, z, x),
+            (x,y,z) => (-z, y, x),
+            (x,y,z) => (-y, -z, x),
+            (x,y,z) => (-y, x, z),
+            (x,y,z) => (-x, -y, z),
+            (x,y,z) => (y, -x, z),
+            (x,y,z) => (-z, -x, y),
+            (x,y,z) => (z, x, y),
+            (x,y,z) => (-x, z, y),
+            (x,y,z) => (-x, y, -z),
+            (x,y,z) => (-y, -x, -z),
+            (x,y,z) => (y, x, -z),
+            (x,y,z) => (y, -z, -x),
+            (x,y,z) => (z, y, -x),
+            (x,y,z) => (-y, z, -x),
+            (x,y,z) => (-z, -y, -x)
+        };
+
+        public (int? xValue, int? yValue, int? zValue) FindSolution(List<int> xA, List<int> yA, List<int> zA, List<int> xB, List<int> yB, List<int> zB)
+        {
+
+            Dictionary<int, int> resultsX = xA.Select((x, i) => x - xB[i]).GroupBy(x => x).ToDictionary(x => x.Key, x => x.ToList().Count());
+            Dictionary<int, int> resultsY = yA.Select((y, i) => y - yB[i]).GroupBy(x => x).ToDictionary(x => x.Key, x => x.ToList().Count());
+            Dictionary<int, int> resultsZ = zA.Select((z, i) => z - zB[i]).GroupBy(x => x).ToDictionary(x => x.Key, x => x.ToList().Count());
+            if (resultsX.Values.Max() > 8 && resultsY.Values.Max() > 8 && resultsZ.Values.Max() > 8)
+            {
+                return (resultsX.Keys.Single(x => resultsX[x] == resultsX.Values.Max()),
+                    resultsY.Keys.Single(x => resultsY[x] == resultsY.Values.Max()),
+                    resultsZ.Keys.Single(x => resultsZ[x] == resultsZ.Values.Max()));
+            }
+            return (null, null, null);
         }
 
         private static void BuildIntersections(List<Scanner> scanners, List<string> intersections)
@@ -217,7 +212,7 @@ namespace AdventOfCode
 
                     if (matchingDistances.Count() >= 66)
                     {
-                        intersections.Add($"{i},{j}");
+                        intersections.Add($"{scanners[i].Number},{scanners[j].Number}");
                     }
                 }
             }
@@ -268,6 +263,11 @@ namespace AdventOfCode
         private int ComputeDist(int xA, int xB, int yA, int yB)
         {
             return Math.Abs(xA - xB) + Math.Abs(yA - yB);
+        }
+
+        private int Compute3dDist(Coordinate a, Coordinate b)
+        {
+            return Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y) + Math.Abs(a.Z - b.Z);
         }
     }
 }

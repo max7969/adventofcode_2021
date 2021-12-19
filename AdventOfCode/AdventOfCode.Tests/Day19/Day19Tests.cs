@@ -54,7 +54,21 @@ namespace AdventOfCode.Tests
             long result = day.Compute2(filePath);
 
             // Assert
-            result.Should().Be(79);
+            result.Should().Be(3621);
+        }
+
+        [Fact]
+        public void SolutionPart2()
+        {
+            // Arrange 
+            string filePath = $"{new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName}/Day19/Resources/input.txt";
+            Day19 day = new Day19();
+
+            // Act
+            long result = day.Compute2(filePath);
+
+            // Result
+            _output.WriteLine(result.ToString());
         }
     }
 }
