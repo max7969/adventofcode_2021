@@ -19,6 +19,7 @@ namespace AdventOfCode
             public List<Coordinate> Beacons { get; set; } = new List<Coordinate>();
             public Dictionary<string, string> Distances { get; set; } = new Dictionary<string, string>();
             public Dictionary<int, int> BeaconsIntersections { get; set; } = new Dictionary<int, int>();
+            public Coordinate Coordinate { get; set; }
         }
 
         public class Coordinate
@@ -31,21 +32,110 @@ namespace AdventOfCode
         public long Compute(string filePath)
         {
             var input = FileReader.GetFileContent(filePath).ToList();
-            
+
             List<Scanner> scanners = ExtractScanners(input);
-
             List<string> intersections = new List<string>();
+            BuildIntersections(scanners, intersections);
 
-            for (int i = 0;i < scanners.Count; i++)
+            int sum = 0;
+            var all = scanners.SelectMany(x => x.BeaconsIntersections.Values).ToList();
+
+            foreach (var value in all.ToHashSet())
             {
-                for (int j = i+1;j< scanners.Count;j++)
+                sum += all.Count(x => x == value) / value;
+            }
+
+            return sum;
+        }
+
+        public long Compute2(string filePath)
+        {
+            var input = FileReader.GetFileContent(filePath).ToList();
+
+            List<Scanner> scanners = ExtractScanners(input);
+            List<string> intersections = new List<string>();
+            BuildIntersections(scanners, intersections);
+
+            while(scanners.Any(x => x.Coordinate == null))
+            {
+                var knownPositions = scanners.Where(x => x.Coordinate != null).ToList();
+                var unknownPositions = scanners.Where(x => x.Coordinate == null).ToList();
+
+                foreach(var intersection in intersections)
+                {
+                    int a = int.Parse(intersection.Split(",")[0]);
+                    int b = int.Parse(intersection.Split(",")[1]);
+
+                    if (knownPositions.Select(x => x.Number).Contains(a) && unknownPositions.Select(x => x.Number).Contains(b))
+                    {
+                        var known = scanners.Single(x => x.Number == a);
+                        var unknown = scanners.Single(x => x.Number == b);
+
+                        var matchingDistances = known.Distances.Keys.Intersect(unknown.Distances.Keys).ToList();
+                        HashSet<int> beaconInI = new HashSet<int>();
+                        HashSet<int> beaconInJ = new HashSet<int>();
+                        List<(Coordinate, Coordinate)> beaconsCouple = new List<(Coordinate, Coordinate)>();
+                        foreach (var matchingDistance in matchingDistances)
+                        {
+                            foreach (var element in known.Distances[matchingDistance].Split(",").Select(int.Parse).ToList())
+                            {
+                                beaconInI.Add(element);
+                            }
+                            foreach (var element in unknown.Distances[matchingDistance].Split(",").Select(int.Parse).ToList())
+                            {
+                                beaconInJ.Add(element);
+                            }
+                        }
+
+                        for (int i = 0; i < beaconInI.Count; i++)
+                        {
+                            beaconsCouple.Add((known.Beacons[beaconInI.ToList()[i]], unknown.Beacons[beaconInJ.ToList()[i]]));
+                        }
+
+                        int? xValue = FindSolution(beaconsCouple.Select(x => x.Item1.X).ToList(), beaconsCouple.Select(x => x.Item2.X).ToList());
+
+                        xValue = xValue ?? FindSolution(beaconsCouple.Select(x => x.Item1.X).ToList(), beaconsCouple.Select(x => -x.Item2.X).ToList());
+                        xValue = xValue ?? FindSolution(beaconsCouple.Select(x => x.Item1.X).ToList(), beaconsCouple.Select(x => x.Item2.Y).ToList());
+                        xValue = xValue ?? FindSolution(beaconsCouple.Select(x => x.Item1.X).ToList(), beaconsCouple.Select(x => x.Item2.Z).ToList());
+
+                        int? yValue = FindSolution(beaconsCouple.Select(x => x.Item1.Y).ToList(), beaconsCouple.Select(x => x.Item2.Y).ToList());
+                        yValue = yValue ?? FindSolution(beaconsCouple.Select(x => x.Item1.Y).ToList(), beaconsCouple.Select(x => x.Item2.X).ToList());
+                        yValue = yValue ?? FindSolution(beaconsCouple.Select(x => x.Item1.Y).ToList(), beaconsCouple.Select(x => x.Item2.Z).ToList());
+
+                        int? zValue = FindSolution(beaconsCouple.Select(x => x.Item1.Z).ToList(), beaconsCouple.Select(x => x.Item2.Z).ToList());
+                        zValue = zValue ?? FindSolution(beaconsCouple.Select(x => x.Item1.Z).ToList(), beaconsCouple.Select(x => x.Item2.X).ToList());
+                        zValue = zValue ?? FindSolution(beaconsCouple.Select(x => x.Item1.Z).ToList(), beaconsCouple.Select(x => x.Item2.Y).ToList());
+
+                        unknown.Coordinate = new Coordinate {X = known.Coordinate.X + xValue ?? 0, Y= known.Coordinate.Y + yValue ?? 0, Z = known.Coordinate.Z + zValue ?? 0};
+                    }
+                }
+            }
+
+            return 0;
+        }
+
+        public int? FindSolution(List<int> a, List<int> b)
+        {
+            HashSet<int> results = a.Select((x, i) => x + b[i]).ToHashSet();
+            if (results.Count == 1)
+            {
+                return results.First();
+            }
+            return null;
+        }
+
+        private static void BuildIntersections(List<Scanner> scanners, List<string> intersections)
+        {
+            for (int i = 0; i < scanners.Count; i++)
+            {
+                for (int j = i + 1; j < scanners.Count; j++)
                 {
                     var matchingDistances = scanners[i].Distances.Keys.Intersect(scanners[j].Distances.Keys).ToList();
 
                     HashSet<int> beaconInI = new HashSet<int>();
                     HashSet<int> beaconInJ = new HashSet<int>();
 
-                    foreach(var matchingDistance in matchingDistances)
+                    foreach (var matchingDistance in matchingDistances)
                     {
                         foreach (var element in scanners[i].Distances[matchingDistance].Split(",").Select(int.Parse).ToList())
                         {
@@ -72,17 +162,6 @@ namespace AdventOfCode
                     }
                 }
             }
-
-            int sum = 0;
-            var all = scanners.SelectMany(x => x.BeaconsIntersections.Values).ToList();
-
-            foreach (var value in all.ToHashSet())
-            {
-                sum += all.Count(x => x == value) / value;
-            }
-
-
-            return sum;
         }
 
         private List<Scanner> ExtractScanners(List<string> input)
@@ -123,6 +202,7 @@ namespace AdventOfCode
                     scanner.BeaconsIntersections.Add(i, 1);
                 }
             }
+            scanners[0].Coordinate = new Coordinate();
             return scanners;
         }
 

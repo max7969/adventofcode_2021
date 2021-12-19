@@ -41,6 +41,20 @@ namespace AdventOfCode.Tests
 
             // Result
             _output.WriteLine(result.ToString());
-        }        
+        }
+
+        [Fact]
+        public void Test1Part2()
+        {
+            // Arrange 
+            string filePath = $"{new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName}/Day19/Resources/test.txt";
+            Day19 day = new Day19();
+
+            // Act
+            long result = day.Compute2(filePath);
+
+            // Assert
+            result.Should().Be(79);
+        }
     }
 }
