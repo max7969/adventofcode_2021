@@ -29,14 +29,10 @@ namespace AdventOfCode
                 }
             }
 
-            Print(map);
-
             for (int i = 0; i < steps; i++)
             {
                 map = AddBorders(map, i, code);
-                Print(map);
                 var copyMap = map.GroupBy(x => x.Key).ToDictionary(x => x.Key, x => x.Single().Value);
-                Print(copyMap);
                 foreach (var element in map)
                 {
                     var selectors = GetSelectors(element.Key);
@@ -56,32 +52,7 @@ namespace AdventOfCode
                 }
                 map = copyMap;
             }
-
-            Print(map);
-
             return map.Values.Count(x => x == "#");
-        }
-
-        private static void Print(Dictionary<string, string> map)
-        {
-            var xMin = map.Keys.Select(x => int.Parse(x.Split(",")[0])).Min();
-            var xMax = map.Keys.Select(x => int.Parse(x.Split(",")[0])).Max();
-            var yMin = map.Keys.Select(x => int.Parse(x.Split(",")[1])).Min();
-            var yMax = map.Keys.Select(x => int.Parse(x.Split(",")[1])).Max();
-
-            List<string> print = new List<string>();
-            for (int i = xMin; i <= xMax; i++)
-            {
-                string line = "";
-                for (int j = yMin; j <= yMax; j++)
-                {
-                    if (map.ContainsKey($"{i},{j}"))
-                    {
-                        line += map[$"{i},{j}"] == "." ? "0" : "1";
-                    }
-                }
-                print.Add(line);
-            }
         }
 
         public Dictionary<string, string> AddBorders(Dictionary<string, string> map, int iteration, List<string> code)

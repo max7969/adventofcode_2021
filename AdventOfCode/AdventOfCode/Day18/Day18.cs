@@ -13,12 +13,6 @@ namespace AdventOfCode
 {
     public class Day18
     {
-        public class Action
-        {
-            public int Type { get; set; }
-            public int Order { get; set; }
-            public int Level { get; set; }
-        }  
         public long Compute(string filePath)
         {
             var input = FileReader.GetFileContent(filePath).ToList();

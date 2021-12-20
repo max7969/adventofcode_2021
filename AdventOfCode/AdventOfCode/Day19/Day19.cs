@@ -165,7 +165,6 @@ namespace AdventOfCode
 
         public (int? xValue, int? yValue, int? zValue) FindSolution(List<int> xA, List<int> yA, List<int> zA, List<int> xB, List<int> yB, List<int> zB)
         {
-
             Dictionary<int, int> resultsX = xA.Select((x, i) => x - xB[i]).GroupBy(x => x).ToDictionary(x => x.Key, x => x.ToList().Count());
             Dictionary<int, int> resultsY = yA.Select((y, i) => y - yB[i]).GroupBy(x => x).ToDictionary(x => x.Key, x => x.ToList().Count());
             Dictionary<int, int> resultsZ = zA.Select((z, i) => z - zB[i]).GroupBy(x => x).ToDictionary(x => x.Key, x => x.ToList().Count());
